@@ -9,9 +9,9 @@ echo "._/ /_//_/_/  "
 
 echo -e "\033[0m"
 
-
-dir=$(mkdir subs-$(echo $1 | cut -d '.' -f 1))
-cd dir
+dir="subs-$(echo $1 | cut -d '.' -f 1)"
+mkdir -p "$dir"
+cd "$dir"
 
 echo -e "\033[33m starting subfinder \033[0m"
 subfinder -d $1 -all > subfind.txt
