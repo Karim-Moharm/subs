@@ -9,6 +9,15 @@ echo "._/ /_//_/_/  "
 
 echo -e "\033[0m"
 
+function error_exit {
+    echo "$1" >&2
+    exit 1
+}
+
+if [ -z "$1" ]; then
+	error_exit "[*] Usage $0 target.com"
+fi
+
 dir="subs-$(echo $1 | cut -d '.' -f 1)"
 mkdir -p "$dir"
 cd "$dir"
