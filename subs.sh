@@ -14,6 +14,11 @@ function error_exit {
     exit 1
 }
 
+function print_colored {
+    echo -e "\n\033[33m-----------$1-----------\033[0m"
+}
+
+
 if [ -z "$1" ]; then
 	error_exit "[*] Usage $0 target.com"
 fi
@@ -22,35 +27,37 @@ dir="subs-$(echo $1 | cut -d '.' -f 1)"
 mkdir -p "$dir"
 cd "$dir"
 
-echo -e "\033[33m starting subfinder \033[0m"
+print_colored "starting subfinder"
 subfinder -d $1 -all > subfind.txt &
 
-echo "\033[33m starting assetfinder \033[0m"
+print_colored "starting assetfinder"
 assetfinder $1 -subs-only | tee asset.txt &
 
-echo "\033[33m starting findomain \033[0m"
+wait
+
+print_colored "starting findomain"
 findomain -t $1 -u findomain.txt &
 
-echo "\033[33m starting github-subdomains \033[0m"
-read -p "enter the github token: " gh_token
-github-subdomains -d target.com -t $gh_token -o github-subs.txt &
+print_colored "starting github-subdomains"
+github-subdomains -d $1 -t $GHToken -o github-subs.txt &
+
+wait
 
 cat subfind.txt asset.txt findomain.txt github-subs.txt > subs.txt
 
 nonfiltered_subs=$(cat subs.txt | wc -l)
-echo "\033[33m number of subdomains before filtering: $nonfiltered_subs \033[0m"
+print_colored "number of subdomains before filtering: $nonfiltered_subs"
+
 cat subs.txt | anew subs.txt 
 
 filtered_subs=$(cat subs.txt | wc -l)
-echo "\033[33m number of subdomains after filtering: $filtered_subs \033[0m"
+print_colored "number of subdomains after filtering: $filtered_subs"
 
-echo "\033[32m getting live subs... \033[0m"
+echo -e "\033[32m\n\n---------------------------getting live subs---------------------------\033[0m"
 
-cat subs | httpx | tee httpx.txt &
-cat subs | httprobe | tee httprobe.httpx &
+cat subs.txt | httpx -o httpx.txt 
+cat subs.txt | httprobe > httprobe.txt
 
-
-wait
 
 echo "live domain using httpx: $(cat httpx.txt | wc -l)" 
 echo "live domain using httprobe: $(cat httprobe.txt | wc -l)"
